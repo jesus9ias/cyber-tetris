@@ -16,6 +16,6 @@ defineProps({
 .cell {
   width: 20px;
   height: 20px;
-  border: 1px solid black;
+  border: 1px solid #2f2f2f;
 }
 </style>

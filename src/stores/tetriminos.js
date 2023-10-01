@@ -34,15 +34,16 @@ export const useTetriminos = defineStore('tetriminos', () => {
   const matrix = ref([]);
 
   const keys = {
-    enter: 13,
-    left: 37,
-    up: 38,
-    right: 39,
-    down: 40,
-    pause: 80,
-    restart: 82,
-    zi: 90,
-    eks: 88
+    enter: 13, //Accept
+    left: 37, //Move Left
+    up: 38, //Rotate Right
+    right: 39, //Move Right
+    down: 40, //Soft Drop
+    space: 32, //Hard Drop
+    pi: 80, //Pause
+    ar: 82, //Restart
+    zi: 90, //Rotate Left
+    eks: 88 //Rotate Right
   };
 
   const listenKeyboard = () => {
@@ -76,11 +77,15 @@ export const useTetriminos = defineStore('tetriminos', () => {
       paintTetrimino();
     }
 
-    if (key.keyCode == keys.down) {
+    if (key.keyCode == keys.space) {
       falling = true;
       while(falling) {
-        processing();
+        stepDown();
       }
+    }
+
+    if (key.keyCode == keys.down) {
+      stepDown();
     }
 
     if (key.keyCode === keys.zi) {
@@ -188,9 +193,27 @@ export const useTetriminos = defineStore('tetriminos', () => {
     tetriminoRow.value = 0;
     tetriminoCol.value = 4;
     tetrimino = getTetrimino();
+
+    const {
+      isOutOfRange,
+      hasBlockedWayDown
+    } = getRestrictions();
+  
+    if (isOutOfRange.length > 0 || hasBlockedWayDown.length > 0) {
+      restart();
+    }
   }
 
-  const processing = () => {
+  const restart = () => {
+    level.value = 1;
+    points.value = 0
+    totalLinesCleared.value = 0
+    levelLinesCleared.value = 0
+    createCells();
+    callTetrimino();
+  };
+
+  const getRestrictions = () => {
     const isOutOfRange = tetrimino.sides[tetrimino.position]
       .filter((mino) => tetriminoRow.value + mino[0] + 1 >= 20);
 
@@ -198,7 +221,19 @@ export const useTetriminos = defineStore('tetriminos', () => {
       .filter((mino) => matrix.value[tetriminoRow.value + mino[0] + 1]
         && matrix.value[tetriminoRow.value + mino[0] + 1][tetriminoCol.value + mino[1]]
         && matrix.value[tetriminoRow.value + mino[0] + 1][tetriminoCol.value + mino[1]].locked);
-    
+      
+      return {
+        isOutOfRange,
+        hasBlockedWayDown
+      }
+  }
+
+  const stepDown = () => {
+    const {
+      isOutOfRange,
+      hasBlockedWayDown
+    } = getRestrictions();
+  
     if (isOutOfRange.length === 0 && hasBlockedWayDown.length === 0) {
       tetriminoRow.value++;
     } else {
@@ -211,7 +246,7 @@ export const useTetriminos = defineStore('tetriminos', () => {
 
   const startInterval = () => {
     clearInterval(interval);
-    interval = setInterval(processing, levelProperties[level.value].speed);
+    interval = setInterval(stepDown, levelProperties[level.value].speed);
   };
 
   watch(() => tetriminoRow.value, () => {
