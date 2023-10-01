@@ -2,16 +2,20 @@
 import Cell from './components/Cell.vue';
 import { useTetriminos } from '../stores/tetriminos';
 
-const { matrix } = useTetriminos();
+const store = useTetriminos();
 
 </script>
 
 <template>
   <main>
+    <p>Level: {{ store.level }}</p>
+    <p>Points: {{ store.points }}</p>
+    <p>Lines Cleared {{ store.totalLinesCleared }}</p>
+    <p>Lines To Next Level: {{ store.linesToNextLevel }}</p>
     <div
       class="row"
       :key="r"
-      v-for="(row, r) in matrix"
+      v-for="(row, r) in store.matrix"
     >
       <cell
         :key="c"
