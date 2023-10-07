@@ -1,7 +1,8 @@
 export default () => ({
   type: 'L',
   position: 'north',
-  color: 'orange',
+  color: '#ea881f',
+  secondaryColor: '#faa049',
   sides: {
     north: [
       [0, 2],

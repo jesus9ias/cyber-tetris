@@ -110,10 +110,10 @@ export const useTetriminos = defineStore('tetriminos', () => {
       .find((mino) => (tetriminoRow.value + mino[0]) === row && (tetriminoCol.value + mino[1]) === col);
 
     if (matchMatrix) {
-      return tetrimino.color;
+      return { color: tetrimino.color, secondaryColor: tetrimino.secondaryColor };
     }
 
-    return null;
+    return { color: null, secondaryColor: null };
   }
 
   const createCells = () => {
@@ -134,7 +134,9 @@ export const useTetriminos = defineStore('tetriminos', () => {
     for (let r = 0; r <= 19; r++) {
       for (let c = 0; c <= 9; c++) {
         if (matrix.value[r] && !matrix.value[r][c].locked) {
-          matrix.value[r][c].color = getTetriminoColor(r, c);
+          const { color, secondaryColor } = getTetriminoColor(r, c);
+          matrix.value[r][c].color = color;
+          matrix.value[r][c].secondaryColor = secondaryColor;
         }
       }
     }
@@ -144,6 +146,7 @@ export const useTetriminos = defineStore('tetriminos', () => {
     falling = false;
     tetrimino.sides[tetrimino.position].forEach((mino) => {
       matrix.value[tetriminoRow.value + mino[0]][tetriminoCol.value + mino[1]].color = tetrimino.color;
+      matrix.value[tetriminoRow.value + mino[0]][tetriminoCol.value + mino[1]].secondaryColor = tetrimino.secondaryColor;
       matrix.value[tetriminoRow.value + mino[0]][tetriminoCol.value + mino[1]].locked = true;
     });
   }
@@ -175,6 +178,7 @@ export const useTetriminos = defineStore('tetriminos', () => {
         matrix.value[0].push({
           col: c,
           color: null,
+          secondaryColor: null,
           locked: false
         });
       }

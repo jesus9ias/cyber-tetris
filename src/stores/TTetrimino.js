@@ -1,7 +1,8 @@
 export default () => ({
   type: 'T',
   position: 'north',
-  color: 'purple',
+  color: '#8d248a',
+  secondaryColor: '#994696',
   sides: {
     north: [
       [0, 1],
