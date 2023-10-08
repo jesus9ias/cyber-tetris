@@ -6,6 +6,8 @@ import JTetrimino from './JTetrimino';
 import STetrimino from './STetrimino';
 import ZTetrimino from './ZTetrimino';
 
+let count = 0;
+
 export default () => {
   const shapes = [
     TTetrimino,
@@ -17,6 +19,8 @@ export default () => {
     ZTetrimino
   ];
 
+  count++;
+
   const shapeToUse = Math.floor(Math.random() * shapes.length);
-  return shapes[shapeToUse]();
+  return { id: count, ...shapes[shapeToUse]()};
 }

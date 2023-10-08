@@ -1,23 +1,31 @@
 import { ref, watch, computed } from 'vue';
 import { defineStore } from 'pinia';
-import getTetrimino from './getTetrimino';
+import getTetrimino from '../tetriminos/getTetrimino';
 
-export const useTetriminos = defineStore('tetriminos', () => {
+export const useOperations = defineStore('operation', () => {
+  const nextQueue = ref([getTetrimino(), getTetrimino(), getTetrimino(), getTetrimino(), getTetrimino()]);
+  const holdQueue = ref([]);
   let tetrimino = getTetrimino();
   const tetriminoRow = ref(0);
   const tetriminoCol = ref(3);
 
+
   const levelProperties = {
-    1: { lines: 10, speed: 500 },
-    2: { lines: 8, speed: 300 },
-    3: { lines: 5, speed: 200 },
-    4: { lines: 5, speed: 200 },
-    5: { lines: 5, speed: 200 },
-    6: { lines: 5, speed: 200 },
-    7: { lines: 5, speed: 200 },
-    8: { lines: 5, speed: 200 },
-    9: { lines: 5, speed: 200 },
-    10: { lines: 5, speed: 200 }
+    1: { lines: 10, speed: 1000 },
+    2: { lines: 8, speed: 793 },
+    3: { lines: 5, speed: 618 },
+    4: { lines: 5, speed: 473 },
+    5: { lines: 5, speed: 355 },
+    6: { lines: 5, speed: 262 },
+    7: { lines: 5, speed: 190 },
+    8: { lines: 5, speed: 135 },
+    9: { lines: 5, speed: 94 },
+    10: { lines: 5, speed: 64 },
+    11: { lines: 5, speed: 43 },
+    12: { lines: 5, speed: 28 },
+    13: { lines: 5, speed: 18 },
+    14: { lines: 5, speed: 11 },
+    15: { lines: 5, speed: 7 }
   };
 
   let interval;
@@ -43,7 +51,8 @@ export const useTetriminos = defineStore('tetriminos', () => {
     pi: 80, //Pause
     ar: 82, //Restart
     zi: 90, //Rotate Left
-    eks: 88 //Rotate Right
+    eks: 88, //Rotate Right
+    ech: 72 //Hold
   };
 
   const listenKeyboard = () => {
@@ -102,6 +111,19 @@ export const useTetriminos = defineStore('tetriminos', () => {
       if (tetrimino.position === 'south') { tetrimino.position = 'west'; return };
       if (tetrimino.position === 'west') { tetrimino.position = 'north'; return };
       paintTetrimino();
+    }
+
+    if (key.keyCode === keys.ech) {
+      if (holdQueue.value.length === 1) {
+        const aux = holdQueue.value.shift();
+        holdQueue.value.push(tetrimino);
+        tetriminoRow.value = 0;
+        tetriminoCol.value = 4;
+        tetrimino = aux;
+      } else {
+        holdQueue.value.push(tetrimino);
+        callTetrimino();
+      }
     }
   }
 
@@ -166,11 +188,12 @@ export const useTetriminos = defineStore('tetriminos', () => {
     }
 
     lockedLines.forEach((line) => {
-      points.value += 10;
       totalLinesCleared.value++;
       levelLinesCleared.value++;
       matrix.value.splice(line, 1);
     });
+
+    updateScore(lockedLines.length);
 
     lockedLines.forEach(() => {
       matrix.value.unshift([]);
@@ -185,6 +208,13 @@ export const useTetriminos = defineStore('tetriminos', () => {
     });
   };
 
+  const updateScore = (lockedLines) => {
+    if (lockedLines < 1) {
+      return;
+    }
+    points.value += ((lockedLines * 100) + ((lockedLines - 1) * 100)) * level.value;
+  }
+
   const reviewLevel = () => {
     if (linesToNextLevel.value <= 0) {
       levelLinesCleared.value = 0;
@@ -192,11 +222,11 @@ export const useTetriminos = defineStore('tetriminos', () => {
       startInterval();
     }
   }
-  
+
   const callTetrimino = () => {
     tetriminoRow.value = 0;
     tetriminoCol.value = 4;
-    tetrimino = getTetrimino();
+    moveQueue();
 
     const {
       isOutOfRange,
@@ -213,6 +243,7 @@ export const useTetriminos = defineStore('tetriminos', () => {
     points.value = 0
     totalLinesCleared.value = 0
     levelLinesCleared.value = 0
+    startInterval();
     createCells();
     callTetrimino();
   };
@@ -253,6 +284,11 @@ export const useTetriminos = defineStore('tetriminos', () => {
     interval = setInterval(stepDown, levelProperties[level.value].speed);
   };
 
+  const moveQueue = () => {
+    tetrimino = nextQueue.value.shift();
+    nextQueue.value.push(getTetrimino());
+  }
+
   watch(() => tetriminoRow.value, () => {
     paintTetrimino();
   });
@@ -264,6 +300,8 @@ export const useTetriminos = defineStore('tetriminos', () => {
   return {
     tetrimino,
     matrix,
+    nextQueue,
+    holdQueue,
     level,
     points,
     totalLinesCleared,
