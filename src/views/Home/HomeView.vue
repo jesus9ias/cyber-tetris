@@ -14,12 +14,16 @@ const store = useOperations();
       <p>Points: {{ store.points }}</p>
       <p>Lines Cleared {{ store.totalLinesCleared }}</p>
       <p>Lines To Next Level: {{ store.linesToNextLevel }}</p>
+      <p>To Hold: {{ store.maxHold }}</p>
     </div>
     <div class="hold-queue">
       <one-tetrimino
       :key="tetrimino.id"
         v-for="tetrimino in store.holdQueue"
         :tetrimino="tetrimino"
+      />
+      <one-tetrimino
+        v-if="store.holdQueue.length === 0"
       />
     </div>
     <div class="matrix">

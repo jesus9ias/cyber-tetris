@@ -12,7 +12,7 @@ const props = defineProps({
 const matrix = ref([]);
 
 const getTetriminoColor = (row, col) => {
-  const matchMatrix = props.tetrimino && props.tetrimino.sides[props.tetrimino.position]
+  const matchMatrix = props.tetrimino.id && props.tetrimino.sides[props.tetrimino.position]
     .find((mino) => mino[0] === row && mino[1] === col);
 
   if (matchMatrix) {
