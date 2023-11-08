@@ -8,9 +8,16 @@ defineProps({
 </script>
 
 <template>
-  <div class="cell">
-    <div class="cell__inner" :style="{ background: cell.color, borderColor: cell.secondaryColor }">
-    </div>
+  <div
+    class="cell"
+    :style="{
+      background: cell.colors[0],
+      borderTopColor: cell.colors[1],
+      borderRightColor: cell.colors[2],
+      borderBottomColor: cell.colors[2],
+      borderLeftColor: cell.colors[1]
+    }"
+  >
   </div>
 </template>
 
@@ -18,12 +25,12 @@ defineProps({
 .cell {
   width: 20px;
   height: 20px;
-  border: 1px solid #2f2f2f;
-}
-.cell__inner {
-  width: 100%;
-  height: 100%;
-  border-width: 2px;
+  border-width: 3px;
   border-style: solid;
+  background: #110e0f;
+  border-bottom-color: #171719;
+  border-right-color: #171719;
+  border-left-color: #000002;
+  border-top-color: #000002;
 }
 </style>

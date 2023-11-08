@@ -1,36 +1,54 @@
 <script setup>
+import { useOperations } from '@/composables/useOperations';
 import Cell from './components/Cell.vue';
-import { useOperations } from '../../stores/operation';
+import Pause from './components/Pause.vue';
+import GameOver from './components/GameOver.vue';
 import OneTetrimino from './components/OneTetrimino.vue';
 
-const store = useOperations();
+const {
+  matrix,
+  nextQueue,
+  holdQueue,
+  maxHold,
+  level,
+  score,
+  gameState,
+  totalLinesCleared,
+  linesToNextLevel
+} = useOperations();
 
 </script>
 
 <template>
+  <pause v-if="gameState === 'paused'" />
+  <game-over v-if="gameState === 'gameOver'" />
   <main>
-    <div class="stats">
-      <p>Level: {{ store.level }}</p>
-      <p>Points: {{ store.points }}</p>
-      <p>Lines Cleared {{ store.totalLinesCleared }}</p>
-      <p>Lines To Next Level: {{ store.linesToNextLevel }}</p>
-      <p>To Hold: {{ store.maxHold }}</p>
-    </div>
     <div class="hold-queue">
-      <one-tetrimino
-      :key="tetrimino.id"
-        v-for="tetrimino in store.holdQueue"
-        :tetrimino="tetrimino"
-      />
-      <one-tetrimino
-        v-if="store.holdQueue.length === 0"
-      />
+      <div>
+        <one-tetrimino
+          :key="tetrimino.id"
+          v-for="tetrimino in holdQueue"
+          :tetrimino="tetrimino"
+        />
+        <one-tetrimino
+          v-if="holdQueue.length === 0"
+        />
+      </div>
+      <p class="hold-queue-remaining">To Hold <span>{{ maxHold }}</span></p>
+    </div>
+    <div class="stats">
+      <div>
+        <p>Level <span>{{ level }}</span></p>
+        <p>Score <span>{{ score }}</span></p>
+        <p>Lines Cleared <span>{{ totalLinesCleared }}</span></p>
+        <p>Remaining Lines <span>{{ linesToNextLevel }}</span></p>
+      </div>
     </div>
     <div class="matrix">
       <div
         class="row"
         :key="r"
-        v-for="(row, r) in store.matrix"
+        v-for="(row, r) in matrix"
       >
         <cell
           :key="c"
@@ -39,17 +57,28 @@ const store = useOperations();
         />
       </div>
     </div>
-    <div class="next-queue">
-      <one-tetrimino
-        :key="tetrimino.id"
-        v-for="tetrimino in store.nextQueue"
-        :tetrimino="tetrimino"
-      />
+    <div class="next-queue" v-if="nextQueue.length > 0">
+      <div>
+        <one-tetrimino
+          :key="tetrimino.id"
+          v-for="tetrimino in nextQueue"
+          :tetrimino="tetrimino"
+        />
+      </div>
+    </div>
+    <div class="next-queue" v-if="nextQueue.length === 0">
+      <div>
+        <one-tetrimino />
+        <one-tetrimino />
+        <one-tetrimino />
+        <one-tetrimino />
+        <one-tetrimino />
+      </div>
     </div>
   </main>
 </template>
 
-<style>
+<style lang="scss">
 main {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -58,17 +87,57 @@ main {
   grid-row-gap: 0px;
   max-width: 300px;
   margin: auto;
+  grid-template-areas: 
+    "hold matrix next"
+    "stats matrix next"; 
 }
 
-.stats { grid-area: 1 / 1 / 2 / 4; }
-.hold-queue {
-  grid-area: 2 / 1 / 3 / 2;
-  padding-right: 20px;
+.stats {
+  grid-area: stats;
+  font-size: 10px;
+  padding: 50px 0px;
+  color: white;
+  & > div {
+    background-color: #8d248a;
+    padding: 5px;
+  }
+  span {
+    font-weight: bold;
+  }
 }
-.matrix { grid-area: 2 / 2 / 3 / 3; }
+
+.hold-queue {
+  grid-area: hold;
+  padding-right: 20px;
+  & > div {
+    border: 5px solid #01aaee;
+  }
+  &-remaining {
+    background-color: #01aaee;
+    padding: 2px;
+    color: white;
+    font-size: 10px;
+    display: inline-block;
+    margin-top: 0px;
+    position: absolute;
+    right: 20px;
+    span {
+      font-weight: bold;
+    }
+  }
+}
+
+.matrix {
+  grid-area: matrix;
+  border: 5px solid #8d248a;
+}
+
 .next-queue {
-  grid-area: 2 / 3 / 3 / 4;
+  grid-area: next;
   padding-left: 20px;
+  & > div {
+    border: 5px solid #e71c26;
+  }
 }
 
 .row {

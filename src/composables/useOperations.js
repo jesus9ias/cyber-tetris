@@ -1,55 +1,47 @@
-import { ref, watch, computed } from 'vue';
-import { defineStore } from 'pinia';
+import { ref, watch } from 'vue';
+import { useTetriminos } from '@/composables/useTetriminos';
+import { useStats } from '@/composables/usestats';
 import getTetrimino from '../tetriminos/getTetrimino';
 
-export const useOperations = defineStore('operation', () => {
+export const useOperations = () => {
+  const {
+    matrix,
+    createCells,
+    paintTetrimino,
+    tetriminoRow,
+    tetriminoCol
+  } = useTetriminos();
+
+  const {
+    level,
+    score,
+    gameState,
+    gameStates,
+    levelSpeed,
+    linesToNextLevel,
+    totalLinesCleared,
+    levelLinesCleared,
+    goLevelUp,
+    updateScore,
+    updateGameState,
+    addTotalLineCleared,
+    addLevelLineCleared
+  } = useStats();
+
   const nextQueue = ref([getTetrimino(), getTetrimino(), getTetrimino(), getTetrimino(), getTetrimino()]);
   const holdQueue = ref([]);
   const maxHold = ref(10);
   let tetrimino = getTetrimino();
-  const tetriminoRow = ref(0);
-  const tetriminoCol = ref(3);
+  tetriminoCol.value = 3;
 
-  const gameStates = {
-    starting: 'starting',
-    playing: 'playing',
-    paused: 'paused',
-    gameOver: 'gameOver',
-    success: 'success'
+  const pausedHolder = {
+    holdQueue: [],
+    nextQueue: [],
+    matrix: []
   }
 
-  const gameState = ref(gameStates.playing);
-
-  const levelProperties = {
-    1: { lines: 5, speed: 1000 },
-    2: { lines: 10, speed: 900 },
-    3: { lines: 15, speed: 800 },
-    4: { lines: 20, speed: 700 },
-    5: { lines: 25, speed: 650 },
-    6: { lines: 30, speed: 600 },
-    7: { lines: 35, speed: 550 },
-    8: { lines: 40, speed: 500 },
-    9: { lines: 45, speed: 450 },
-    10: { lines: 50, speed: 400 },
-    11: { lines: 50, speed: 350 },
-    12: { lines: 50, speed: 300 },
-    13: { lines: 50, speed: 250 },
-    14: { lines: 50, speed: 200 },
-    15: { lines: 50, speed: 100 }
-  };
-
   let interval;
-
-  const level = ref(1);
-  const points = ref(0);
-  const totalLinesCleared = ref(0);
-  const levelLinesCleared = ref(0);
-
-  const linesToNextLevel = computed(() => levelProperties[level.value].lines - levelLinesCleared.value);
-
   let falling = false;
-
-  const matrix = ref([]);
 
   const keys = {
     enter: 13, //Accept
@@ -80,7 +72,7 @@ export const useOperations = defineStore('operation', () => {
       });
     if (key.keyCode == keys.right && canNotGoRight.length === 0 && hasSomethingRight.length === 0) {
       tetriminoCol.value++;
-      paintTetrimino();
+      paintTetrimino(19, 9, tetrimino);
     }
   
     const canNotGoLeft = tetrimino.sides[tetrimino.position]
@@ -93,7 +85,7 @@ export const useOperations = defineStore('operation', () => {
       });
     if (key.keyCode == keys.left && canNotGoLeft.length === 0 && hasSomethingLeft.length === 0) {
       tetriminoCol.value--;
-      paintTetrimino();
+      paintTetrimino(19, 9, tetrimino);
     }
 
     if (key.keyCode == keys.space) {
@@ -108,17 +100,17 @@ export const useOperations = defineStore('operation', () => {
     }
 
     if (key.keyCode === keys.zi) {
-      if (tetrimino.position === 'north') { tetrimino.position = 'west'; paintTetrimino(); return };
-      if (tetrimino.position === 'west') { tetrimino.position = 'south'; paintTetrimino(); return };
-      if (tetrimino.position === 'south') { tetrimino.position = 'east'; paintTetrimino(); return };
-      if (tetrimino.position === 'east') { tetrimino.position = 'north'; paintTetrimino(); return };
+      if (tetrimino.position === 'north') { tetrimino.position = 'west'; paintTetrimino(19, 9, tetrimino); return };
+      if (tetrimino.position === 'west') { tetrimino.position = 'south'; paintTetrimino(19, 9, tetrimino); return };
+      if (tetrimino.position === 'south') { tetrimino.position = 'east'; paintTetrimino(19, 9, tetrimino); return };
+      if (tetrimino.position === 'east') { tetrimino.position = 'north'; paintTetrimino(19, 9, tetrimino); return };
     }
 
     if (key.keyCode === keys.eks || key.keyCode ===keys.up) {
-      if (tetrimino.position === 'north') { tetrimino.position = 'east'; paintTetrimino(); return };
-      if (tetrimino.position === 'east') { tetrimino.position = 'south'; paintTetrimino(); return };
-      if (tetrimino.position === 'south') { tetrimino.position = 'west'; paintTetrimino(); return };
-      if (tetrimino.position === 'west') { tetrimino.position = 'north'; paintTetrimino(); return };
+      if (tetrimino.position === 'north') { tetrimino.position = 'east'; paintTetrimino(19, 9, tetrimino); return };
+      if (tetrimino.position === 'east') { tetrimino.position = 'south'; paintTetrimino(19, 9, tetrimino); return };
+      if (tetrimino.position === 'south') { tetrimino.position = 'west'; paintTetrimino(19, 9, tetrimino); return };
+      if (tetrimino.position === 'west') { tetrimino.position = 'north'; paintTetrimino(19, 9, tetrimino); return };
     }
 
     if (key.keyCode === keys.ech && maxHold.value > 0) {
@@ -136,8 +128,16 @@ export const useOperations = defineStore('operation', () => {
     }
 
     if (key.keyCode == keys.pi && gameState.value === gameStates.playing) {
-      gameState.value = gameStates.paused;
+      updateGameState(gameStates.paused);
       clearInterval(interval);
+
+      pausedHolder.holdQueue = holdQueue.value;
+      pausedHolder.nextQueue = nextQueue.value;
+      pausedHolder.matrix = matrix.value;
+      holdQueue.value = [];
+      nextQueue.value = [];
+      createCells(19, 9);
+
       document.removeEventListener('keydown', keyboard);
       document.addEventListener('keydown', keyboardOnPaused);
     }
@@ -145,55 +145,30 @@ export const useOperations = defineStore('operation', () => {
 
   const keyboardOnPaused = (key) => {
     if (key.keyCode == keys.pi && gameState.value === gameStates.paused) {
-      gameState.value = gameStates.playing;
+      updateGameState(gameStates.playing);
+
+      holdQueue.value = pausedHolder.holdQueue;
+      nextQueue.value = pausedHolder.nextQueue;
+      matrix.value = pausedHolder.matrix;
+
       startInterval();
       document.removeEventListener('keydown', keyboardOnPaused);
       document.addEventListener('keydown', keyboard);
     }
   }
 
-  const getTetriminoColor = (row, col) => {
-    const matchMatrix = tetrimino.sides[tetrimino.position]
-      .find((mino) => (tetriminoRow.value + mino[0]) === row && (tetriminoCol.value + mino[1]) === col);
-
-    if (matchMatrix) {
-      return { color: tetrimino.color, secondaryColor: tetrimino.secondaryColor };
+  const keyboardOnEnd = (key) => {
+    if (key.keyCode == keys.ar && gameState.value === gameStates.gameOver) {
+      restart();
+      document.removeEventListener('keydown', keyboardOnEnd);
+      document.addEventListener('keydown', keyboard);
     }
-
-    return { color: null, secondaryColor: null };
   }
-
-  const createCells = () => {
-    matrix.value = [];
-    for (let r = 0; r <= 19; r++) {
-      matrix.value.push([]);
-      for (let c = 0; c <= 9; c++) {
-        matrix.value[r].push({
-          col: c,
-          color: null,
-          locked: false
-        });
-      }
-    }
-  };
-
-  const paintTetrimino = () => {
-    for (let r = 0; r <= 19; r++) {
-      for (let c = 0; c <= 9; c++) {
-        if (matrix.value[r] && !matrix.value[r][c].locked) {
-          const { color, secondaryColor } = getTetriminoColor(r, c);
-          matrix.value[r][c].color = color;
-          matrix.value[r][c].secondaryColor = secondaryColor;
-        }
-      }
-    }
-  };
 
   const lockCells = () => {
     falling = false;
     tetrimino.sides[tetrimino.position].forEach((mino) => {
-      matrix.value[tetriminoRow.value + mino[0]][tetriminoCol.value + mino[1]].color = tetrimino.color;
-      matrix.value[tetriminoRow.value + mino[0]][tetriminoCol.value + mino[1]].secondaryColor = tetrimino.secondaryColor;
+      matrix.value[tetriminoRow.value + mino[0]][tetriminoCol.value + mino[1]].colors = tetrimino.colors;
       matrix.value[tetriminoRow.value + mino[0]][tetriminoCol.value + mino[1]].locked = true;
     });
   }
@@ -213,8 +188,8 @@ export const useOperations = defineStore('operation', () => {
     }
 
     lockedLines.forEach((line) => {
-      totalLinesCleared.value++;
-      levelLinesCleared.value++;
+      addTotalLineCleared();
+      addLevelLineCleared();
       matrix.value.splice(line, 1);
     });
 
@@ -225,25 +200,17 @@ export const useOperations = defineStore('operation', () => {
       for (let c = 0; c <= 9; c++) {
         matrix.value[0].push({
           col: c,
-          color: null,
-          secondaryColor: null,
+          colors: [null, null, null],
           locked: false
         });
       }
     });
   };
 
-  const updateScore = (clearedLines) => {
-    if (clearedLines < 1) {
-      return;
-    }
-    points.value += ((clearedLines * 100) + ((clearedLines - 1) * 100)) * level.value;
-  }
-
   const reviewLevel = () => {
     if (linesToNextLevel.value <= 0) {
       levelLinesCleared.value = 0;
-      level.value++;
+      goLevelUp();
       startInterval();
     }
   }
@@ -259,17 +226,25 @@ export const useOperations = defineStore('operation', () => {
     } = getRestrictions();
   
     if (isOutOfRange.length > 0 || hasBlockedWayDown.length > 0) {
-      restart();
+      endGame();
     }
   }
 
+  const endGame = () => {
+    updateGameState(gameStates.gameOver);
+    clearInterval(interval);
+    document.removeEventListener('keydown', keyboard);
+    document.addEventListener('keydown', keyboardOnEnd);
+  }
+
   const restart = () => {
+    updateGameState(gameStates.playing);
     level.value = 1;
-    points.value = 0
-    totalLinesCleared.value = 0
-    levelLinesCleared.value = 0
+    score.value = 0;
+    totalLinesCleared.value = 0;
+    levelLinesCleared.value = 0;
     startInterval();
-    createCells();
+    createCells(19, 9);
     callTetrimino();
   };
 
@@ -306,7 +281,7 @@ export const useOperations = defineStore('operation', () => {
 
   const startInterval = () => {
     clearInterval(interval);
-    interval = setInterval(stepDown, levelProperties[level.value].speed);
+    interval = setInterval(stepDown, levelSpeed.value);
   };
 
   const moveQueue = () => {
@@ -315,13 +290,11 @@ export const useOperations = defineStore('operation', () => {
   }
 
   watch(() => tetriminoRow.value, () => {
-    paintTetrimino();
+    paintTetrimino(19, 9, tetrimino);
   });
 
-  createCells();
+  createCells(19, 9);
   listenKeyboard();
-
-  //stepDown();
   startInterval();
 
   return {
@@ -331,9 +304,10 @@ export const useOperations = defineStore('operation', () => {
     holdQueue,
     maxHold,
     level,
-    points,
+    score,
+    gameState,
     totalLinesCleared,
     levelLinesCleared,
     linesToNextLevel
   }
-})
+}

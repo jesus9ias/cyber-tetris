@@ -1,8 +1,7 @@
 export default () => ({
   type: 'J',
   position: 'north',
-  color: '#0075c5',
-  secondaryColor: '#3b95cc',
+  colors: ['#0075c5', '#035790', '#3b95cc'],
   sides: {
     north: [
       [0, 0],

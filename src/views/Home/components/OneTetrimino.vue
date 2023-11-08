@@ -1,6 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { useTetriminos } from '@/composables/useTetriminos';
 import Cell from './Cell.vue';
+
+const { matrix, createCells, paintTetrimino } = useTetriminos();
 
 const props = defineProps({
   tetrimino: {
@@ -9,47 +11,8 @@ const props = defineProps({
   }
 });
 
-const matrix = ref([]);
-
-const getTetriminoColor = (row, col) => {
-  const matchMatrix = props.tetrimino.id && props.tetrimino.sides[props.tetrimino.position]
-    .find((mino) => mino[0] === row && mino[1] === col);
-
-  if (matchMatrix) {
-    return { color: props.tetrimino.color, secondaryColor: props.tetrimino.secondaryColor };
-  }
-
-  return { color: null, secondaryColor: null };
-}
-
-const paintTetrimino = () => {
-    for (let r = 0; r <= 3; r++) {
-      for (let c = 0; c <= 3; c++) {
-        if (matrix.value[r] && !matrix.value[r][c].locked) {
-          const { color, secondaryColor } = getTetriminoColor(r, c);
-          matrix.value[r][c].color = color;
-          matrix.value[r][c].secondaryColor = secondaryColor;
-        }
-      }
-    }
-  };
-
-const createCells = () => {
-  matrix.value = [];
-  for (let r = 0; r <= 3; r++) {
-    matrix.value.push([]);
-    for (let c = 0; c <= 3; c++) {
-      matrix.value[r].push({
-        col: c,
-        color: null,
-        locked: false
-      });
-    }
-  }
-};
-
-createCells();
-paintTetrimino();
+createCells(3, 3);
+paintTetrimino(3, 3, props.tetrimino);
 </script>
 
 <template>
